@@ -6,8 +6,8 @@ max_val: .word 4000000
 .extern printf
 main:
 
-	ldr r2, max_val /* load pre-defined max value to r0 */
-	mov r3, #0 /* r3 = index for the loop */
+	ldr r2, max_val /* load pre-defined max value to r2 */
+	mov r3, #1 /* r3 = index for the loop */
 	mov r1, #0 /* r1 = return value */
 
 	loop:
@@ -16,7 +16,29 @@ main:
 	bl fib
 	pop {lr} /* get lr from the stack */
 
-	mov r1, r0
+	/* break condition */
+	cmp r0, r2 /* value greater or equal than max_val */
+	bge end
+
+	/* check if value is even */
+	mov r4, r0
+	push {lr}
+	push {r4}
+	bl is_even /* returns r4 = r4 % 2 */
+	pop {lr}
+
+	/* loop condition */
+	cmp r4, #0
+	bne skip
+	add r1, r1, r0 /* r4 % 2 = 0 => add value to return value */
+	skip:
+	add r3, r3, #1 /* increment index by 1 */
+	b loop /* jump back to loop */
+
+
+
+	end:
+	/* print out result value */
 	ldr r0, =format_string
 	b printf
 
@@ -74,5 +96,19 @@ fib:
 
 	return:
 	mov r0, r4 /* move return value from r4 to r0 */
+
+	mov pc, lr
+
+
+is_even:
+	pop {r4} /* get parameter from the stack */
+
+	mov r5, #2 /* move constant 2 to r5 */
+
+	/* calculate r4 = r4 % 2 */
+	udiv r6, r4, r5 /* r6 = r4 / 2 */
+	mul r5, r6, r5 /* r5 = r6 * 2 = (r4 / 2) * 2 */
+	sub r4, r4, r5 /* r4 = r4 - r5 = r4 - (r4/2) *2 */
+
 
 	mov pc, lr
